@@ -8,54 +8,55 @@ import * as React from 'react'
 // PokemonDataView: the stuff we use to display the pokemon info
 import {PokemonForm, fetchPokemon, PokemonInfoFallback, PokemonDataView} from '../pokemon'
 
+const loadState = {
+  idle: 'idle',
+  pending: 'pending',
+  resolved: 'resolved',
+  rejected: 'rejected'
+}
+
 function PokemonInfo({pokemonName}) {
-  // 🐨 Have state for the pokemon (null)
+
   const [pokemon, setPokemon] = React.useState(null)
   const [error, setError] = React.useState(null)
-
-  // 🐨 use React.useEffect where the callback should be called whenever the
-  // pokemon name changes.
-  // 💰 DON'T FORGET THE DEPENDENCIES ARRAY!
-  // 💰 if the pokemonName is falsy (an empty string) then don't bother making the request (exit early).
-  // 🐨 before calling `fetchPokemon`, clear the current pokemon state by setting it to null.
-  // (This is to enable the loading state when switching between different pokemon.)
-  // 💰 Use the `fetchPokemon` function to fetch a pokemon by its name:
-  //   fetchPokemon('Pikachu').then(
-  //     pokemonData => {/* update all the state here */},
-  //   )
+  const [state, setState] = React.useState(loadState.idle)
 
   React.useEffect(() => {
 
     if (!pokemonName) return;
 
-    setPokemon(null);
-    setError(null);
+    setState(loadState.pending)
 
     fetchPokemon(pokemonName)
-      .then(pokemonData => { setPokemon(pokemonData) })    
-      .catch(error => { setError(error) })
+      .then(pokemonData => 
+      { 
+        setState(loadState.resolved)
+        setPokemon(pokemonData) 
+      })    
+      .catch(error => 
+      { 
+        setState(loadState.rejected)
+        setError(error) 
+      })
 
   }, [pokemonName])
 
-  // 🐨 return the following things based on the `pokemon` state and `pokemonName` prop:
-  //   1. no pokemonName: 'Submit a pokemon'
-  //   2. pokemonName but no pokemon: <PokemonInfoFallback name={pokemonName} />
-  //   3. pokemon: <PokemonDataView pokemon={pokemon} />
-  if (error) {
-    return (
-      <div role="alert">
-        There was an error: <pre style={{whiteSpace: 'normal'}}>{error.message}</pre>
-      </div>
-    )
-  }
-  else if (!pokemonName) { 
-    return 'Submit a pokemon' 
-  }
-  else if (!pokemon) { 
-    return <PokemonInfoFallback name={pokemonName} /> 
-  }
-  else { 
-    return <PokemonDataView pokemon={pokemon} /> 
+  switch (state) {
+      case loadState.idle:
+        return 'Submit a pokemon'   
+
+      case loadState.pending:
+        return <PokemonInfoFallback name={pokemonName} />   
+
+      case loadState.resolved:
+        return <PokemonDataView pokemon={pokemon} />   
+
+      default:
+      return (
+        <div role="alert">
+          There was an error: <pre style={{whiteSpace: 'normal'}}>{error.message}</pre>
+        </div>
+      )
   }
 }
 

@@ -21,6 +21,36 @@ const initialState = {
   error: null
 }
 
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    // Update state so the next render will show the fallback UI.
+    return { error };
+  }
+
+  render() {
+    const { error } = this.state;
+    console.log('render error', error)
+    if (error) {
+      return <this.props.FallbackComponent error={error} />
+    }
+
+    return this.props.children; 
+  }
+}
+
+function ErrorFallback({error}) {
+  return (
+    <div role="alert">
+      There was an error caught by a boundary: <pre style={{whiteSpace: 'normal'}}>{error.message}</pre>
+    </div>        
+  )
+}
+
 function PokemonInfo({pokemonName}) {
 
   const [state, setState] = React.useState(initialState)
@@ -66,11 +96,7 @@ function PokemonInfo({pokemonName}) {
         return <PokemonDataView pokemon={state.pokemon} />   
 
       default:
-      return (
-        <div role="alert">
-          There was an error: <pre style={{whiteSpace: 'normal'}}>{state.error.message}</pre>
-        </div>
-      )
+        throw state.error;
   }
 }
 
@@ -86,7 +112,9 @@ function App() {
       <PokemonForm pokemonName={pokemonName} onSubmit={handleSubmit} />
       <hr />
       <div className="pokemon-info">
-        <PokemonInfo pokemonName={pokemonName} />
+        <ErrorBoundary FallbackComponent={ErrorFallback}>
+          <PokemonInfo pokemonName={pokemonName} />
+        </ErrorBoundary>
       </div>
     </div>
   )

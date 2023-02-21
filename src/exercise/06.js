@@ -12,11 +12,6 @@ const loadState = {
   rejected: 'rejected'
 }
 
-const initialState = {
-  status: loadState.idle,
-  pokemon: null,
-  error: null
-}
 
 // class ErrorBoundary extends React.Component {
 //   constructor(props) {
@@ -40,16 +35,22 @@ const initialState = {
 //   }
 // }
 
-function ErrorFallback({error}) {
+function ErrorFallback({error, resetErrorBoundary}) {
   return (
     <div role="alert">
       There was an error caught by a boundary: <pre style={{whiteSpace: 'normal'}}>{error.message}</pre>
+      <button onClick={resetErrorBoundary}>Try again</button>      
     </div>        
   )
 }
 
 function PokemonInfo({pokemonName}) {
-
+  const initialState = {
+    status: pokemonName ? loadState.pending : loadState.idle,
+    pokemon: null,
+    error: null
+  }
+  
   const [state, setState] = React.useState(initialState)
 
   React.useEffect(() => {
@@ -109,7 +110,7 @@ function App() {
       <PokemonForm pokemonName={pokemonName} onSubmit={handleSubmit} />
       <hr />
       <div className="pokemon-info">
-        <ErrorBoundary key={pokemonName} FallbackComponent={ErrorFallback} onReset={() => {setPokemonName('')}}>
+        <ErrorBoundary FallbackComponent={ErrorFallback} onReset={() => {setPokemonName('')}}>
           <PokemonInfo pokemonName={pokemonName} />
         </ErrorBoundary>
       </div>
